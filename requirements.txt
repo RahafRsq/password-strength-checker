@@ -4,3 +4,4 @@ joblib
 requests
 openpyxl
 fpdf
+scikit-learn
