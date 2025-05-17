@@ -4,7 +4,7 @@ import joblib
 import requests
 import io
 from datetime import datetime
-
+import base64
 
 # GitHub model URLs
 base_url = "https://raw.githubusercontent.com/RahafRsq/password-strength-checker/main/"
@@ -134,7 +134,7 @@ if password:
     for tip in tips:
         st.write(f"▫️ {tip}")
 
-    # Prepare Excel
+    # Prepare Excel file in memory
     row = {
         "Password": password,
         "Logistic Regression": predictions.get("Logistic Regression", ""),
@@ -149,25 +149,29 @@ if password:
     df.to_excel(excel_buffer, index=False)
     excel_data = excel_buffer.getvalue()
 
-    # Result + small download icon
+    # Message + styled download button
     col1, col2 = st.columns([0.9, 0.1])
     with col1:
         st.success("✅ Your password result is ready for download.")
     with col2:
-        st.markdown("""
-            <style>
-            div[data-testid="stDownloadButton"] button {
-                font-size: 16px !important;
-                padding: 4px 8px;
-                height: 2.4em;
-                width: 2.4em;
-            }
-            </style>
+        b64 = base64.b64encode(excel_data).decode()
+        st.markdown(f"""
+            <a href="data:application/octet-stream;base64,{b64}" download="password_results.xlsx">
+                <div style="
+                    background-color:#1f6feb;
+                    padding:13px;
+                    border-radius:10px;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    height: 48px;
+                    width: 48px;
+                    color:white;
+                    font-size:22px;
+                    box-shadow: 0 0 4px #00000055;
+                    border:1px solid #444444;
+                ">
+                    ⬇️
+                </div>
+            </a>
         """, unsafe_allow_html=True)
-
-        st.download_button(
-            label="⬇️",
-            data=excel_data,
-            file_name="password_results.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
