@@ -50,7 +50,6 @@ def check_password_strength(password):
 
     return predictions
 
-# === UI ===
 st.title("🔐 Password Strength Checker")
 
 if 'show_password' not in st.session_state:
@@ -72,7 +71,6 @@ if password:
     if len(password) < 6:
         st.warning("⚠️ Your password is very short. Use at least 6 characters.")
 
-    # Length-based strength
     length = len(password)
     if length >= 13:
         strength_info = ("Strong", "Strong password", "green", "🟢")
@@ -81,11 +79,12 @@ if password:
     else:
         strength_info = ("Weak", "Weak password", "red", "🔴")
 
-    st.subheader("📊 Length-Based Estimate")
+    st.subheader("📊 Length-Based Strength Estimate")
     st.markdown(
         f"<div style='padding:10px; border-radius:10px; background-color:{strength_info[2]}; color:white; font-size:18px;'>"
         f"{strength_info[3]} <strong>{strength_info[0]}</strong> — {strength_info[1]}"
-        f"</div>", unsafe_allow_html=True
+        f"</div>",
+        unsafe_allow_html=True
     )
 
     st.subheader("🤖 Model Predictions:")
@@ -114,7 +113,7 @@ if password:
     for tip in tips:
         st.write(f"▫️ {tip}")
 
-    # Prepare Excel for download (no local save)
+    # Prepare Excel in memory (no local save)
     row = {
         "Password": password,
         "Logistic Regression": predictions.get("Logistic Regression", ""),
@@ -129,10 +128,14 @@ if password:
     df.to_excel(excel_buffer, index=False)
     excel_data = excel_buffer.getvalue()
 
-    # Download button only
-    st.download_button(
-        label="⬇️ Download Password Result (Excel)",
-        data=excel_data,
-        file_name="password_results.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+    # Show success message and emoji-only download side by side
+    col1, col2 = st.columns([0.9, 0.1])
+    with col1:
+        st.success("✅ Your password result is ready for download.")
+    with col2:
+        st.download_button(
+            label="⬇️",
+            data=excel_data,
+            file_name="password_results.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
