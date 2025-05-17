@@ -3,8 +3,6 @@ import pandas as pd
 import joblib
 import requests
 import io
-from collections import Counter
-from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
 # === GitHub Raw URLs ===
@@ -22,7 +20,7 @@ dataset_url = base_url + "passwords_dataset.csv"
 def load_model_from_url(url):
     response = requests.get(url)
     if response.status_code != 200:
-        st.error(f"Failed to load model from: {url}")
+        st.error(f"❌ Failed to load model from: {url}")
         st.stop()
     return joblib.load(io.BytesIO(response.content))
 
@@ -34,32 +32,6 @@ def load_dataset_from_url(url):
     df['Has Uppercase'] = df['Has Uppercase'].astype(int)
     df['Has Special Character'] = df['Has Special Character'].astype(int)
     return df
-
-@st.cache_data
-def compute_model_accuracies():
-    df = load_dataset_from_url(dataset_url)
-    X = df[['Has Lowercase', 'Has Uppercase', 'Has Special Character', 'Length']]
-    y = df['Strength']
-    label_encoder = load_model_from_url(model_urls['label_encoder'])
-    y_encoded = label_encoder.transform(y)
-    X_train, X_test, y_train, y_test = train_test_split(X, y_encoded, test_size=0.2, random_state=42)
-
-    models = {
-        'Logistic Regression': load_model_from_url(model_urls['logistic_regression']),
-        'Random Forest': load_model_from_url(model_urls['random_forest']),
-        'K-Nearest Neighbors': load_model_from_url(model_urls['knn']),
-        'Support Vector Machine': load_model_from_url(model_urls['svm'])
-    }
-
-    acc_dict = {}
-    for name, model in models.items():
-        try:
-            y_pred = model.predict(X_test)
-            acc = accuracy_score(y_test, y_pred)
-            acc_dict[name] = acc
-        except:
-            acc_dict[name] = 0.0
-    return acc_dict
 
 def check_password_strength(password):
     features = {
@@ -128,7 +100,6 @@ if password:
 
     st.subheader("🤖 Model Predictions:")
     predictions = check_password_strength(password)
-    accuracies = compute_model_accuracies()
 
     style_map = {
         'Weak': {'color': 'red', 'emoji': '🔴', 'description': 'Weak password'},
@@ -137,12 +108,9 @@ if password:
     }
 
     for model, result in predictions.items():
-        acc = accuracies.get(model, None)
-        acc_str = f" (Accuracy: {acc*100:.1f}%)" if acc else ""
         style = style_map.get(result, {'color': 'black', 'emoji': '', 'description': result})
-
         st.markdown(
-            f"**{model}{acc_str}:** <span style='color:{style['color']}'>{result} {style['emoji']} - {style['description']}</span>",
+            f"**{model}:** <span style='color:{style['color']}'>{result} {style['emoji']} - {style['description']}</span>",
             unsafe_allow_html=True
         )
 
