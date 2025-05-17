@@ -3,7 +3,8 @@ import pandas as pd
 import joblib
 import requests
 import io
-from sklearn.model_selection import train_test_split
+import os
+from datetime import datetime
 
 # === GitHub Raw URLs ===
 base_url = "https://raw.githubusercontent.com/RahafRsq/password-strength-checker/main/"
@@ -23,15 +24,6 @@ def load_model_from_url(url):
         st.error(f"❌ Failed to load model from: {url}")
         st.stop()
     return joblib.load(io.BytesIO(response.content))
-
-@st.cache_data
-def load_dataset_from_url(url):
-    response = requests.get(url)
-    df = pd.read_csv(io.StringIO(response.text))
-    df['Has Lowercase'] = df['Has Lowercase'].astype(int)
-    df['Has Uppercase'] = df['Has Uppercase'].astype(int)
-    df['Has Special Character'] = df['Has Special Character'].astype(int)
-    return df
 
 def check_password_strength(password):
     features = {
@@ -123,3 +115,22 @@ if password:
     ]
     for tip in tips:
         st.write(f"▫️ {tip}")
+
+    # === Save to Excel ===
+    excel_path = "password_results.xlsx"
+    row = {
+        "Password": password,
+        "Logistic Regression": predictions.get("Logistic Regression", ""),
+        "Random Forest": predictions.get("Random Forest", ""),
+        "K-Nearest Neighbors": predictions.get("K-Nearest Neighbors", ""),
+        "Support Vector Machine": predictions.get("Support Vector Machine", ""),
+        "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    df_row = pd.DataFrame([row])
+    if os.path.exists(excel_path):
+        existing = pd.read_excel(excel_path)
+        new_df = pd.concat([existing, df_row], ignore_index=True)
+    else:
+        new_df = df_row
+    new_df.to_excel(excel_path, index=False)
+    st.success("✅ Password and predictions saved to Excel.")
