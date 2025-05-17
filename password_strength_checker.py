@@ -3,8 +3,6 @@ import pandas as pd
 import joblib
 import requests
 import io
-import os
-import base64
 from datetime import datetime
 
 # GitHub model URLs
@@ -52,6 +50,7 @@ def check_password_strength(password):
 
     return predictions
 
+# === UI ===
 st.title("🔐 Password Strength Checker")
 
 if 'show_password' not in st.session_state:
@@ -73,6 +72,7 @@ if password:
     if len(password) < 6:
         st.warning("⚠️ Your password is very short. Use at least 6 characters.")
 
+    # Length-based strength
     length = len(password)
     if length >= 13:
         strength_info = ("Strong", "Strong password", "green", "🟢")
@@ -81,12 +81,11 @@ if password:
     else:
         strength_info = ("Weak", "Weak password", "red", "🔴")
 
-    st.subheader("📊 Length-Based Strength Estimate")
+    st.subheader("📊 Length-Based Estimate")
     st.markdown(
         f"<div style='padding:10px; border-radius:10px; background-color:{strength_info[2]}; color:white; font-size:18px;'>"
         f"{strength_info[3]} <strong>{strength_info[0]}</strong> — {strength_info[1]}"
-        f"</div>",
-        unsafe_allow_html=True
+        f"</div>", unsafe_allow_html=True
     )
 
     st.subheader("🤖 Model Predictions:")
@@ -115,8 +114,7 @@ if password:
     for tip in tips:
         st.write(f"▫️ {tip}")
 
-    # Save results to Excel
-    excel_path = "password_results.xlsx"
+    # Prepare Excel for download (no local save)
     row = {
         "Password": password,
         "Logistic Regression": predictions.get("Logistic Regression", ""),
@@ -126,38 +124,15 @@ if password:
         "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
 
-    df_row = pd.DataFrame([row])
-    if os.path.exists(excel_path):
-        existing = pd.read_excel(excel_path)
-        new_df = pd.concat([existing, df_row], ignore_index=True)
-    else:
-        new_df = df_row
+    df = pd.DataFrame([row])
+    excel_buffer = io.BytesIO()
+    df.to_excel(excel_buffer, index=False)
+    excel_data = excel_buffer.getvalue()
 
-    new_df.to_excel(excel_path, index=False)
-
-    # ✅ Message left - ⬇️ Emoji-only download right
-    col1, col2 = st.columns([0.9, 0.1])
-    with col1:
-        st.success("✅ Password and predictions saved to Excel.")
-    with col2:
-        with open(excel_path, "rb") as file:
-            b64 = base64.b64encode(file.read()).decode()
-            href = f"""
-            <a href="data:application/octet-stream;base64,{b64}" download="password_results.xlsx">
-                <div style='
-                    background-color:#0f62fe;
-                    padding:10px;
-                    border-radius:10px;
-                    color:white;
-                    text-align:center;
-                    font-size:20px;
-                    height:100%;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    '>
-                    ⬇️
-                </div>
-            </a>
-            """
-            st.markdown(href, unsafe_allow_html=True)
+    # Download button only
+    st.download_button(
+        label="⬇️ Download Password Result (Excel)",
+        data=excel_data,
+        file_name="password_results.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
