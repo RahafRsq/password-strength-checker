@@ -50,6 +50,7 @@ def check_password_strength(password):
 
     return predictions
 
+# === UI ===
 st.title("🔐 Password Strength Checker")
 
 if 'show_password' not in st.session_state:
@@ -71,6 +72,7 @@ if password:
     if len(password) < 6:
         st.warning("⚠️ Your password is very short. Use at least 6 characters.")
 
+    # Length strength
     length = len(password)
     if length >= 13:
         strength_info = ("Strong", "Strong password", "green", "🟢")
@@ -87,6 +89,7 @@ if password:
         unsafe_allow_html=True
     )
 
+    # Model predictions
     st.subheader("🤖 Model Predictions:")
     predictions = check_password_strength(password)
 
@@ -103,6 +106,7 @@ if password:
             unsafe_allow_html=True
         )
 
+    # Tips
     st.subheader("💡 Password Tips:")
     tips = [
         "Use a mix of lowercase and uppercase letters.",
@@ -113,7 +117,7 @@ if password:
     for tip in tips:
         st.write(f"▫️ {tip}")
 
-    # Prepare Excel in memory (no local save)
+    # Generate Excel in memory (no saving)
     row = {
         "Password": password,
         "Logistic Regression": predictions.get("Logistic Regression", ""),
@@ -128,11 +132,21 @@ if password:
     df.to_excel(excel_buffer, index=False)
     excel_data = excel_buffer.getvalue()
 
-    # Show success message and emoji-only download side by side
+    # ⬇️ Enlarged icon + success message
     col1, col2 = st.columns([0.9, 0.1])
     with col1:
         st.success("✅ Your password result is ready for download.")
     with col2:
+        st.markdown("""
+            <style>
+            div[data-testid="stDownloadButton"] button {
+                font-size: 24px !important;
+                padding: 0.75em 1.2em;
+                height: 3.2em;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+
         st.download_button(
             label="⬇️",
             data=excel_data,
