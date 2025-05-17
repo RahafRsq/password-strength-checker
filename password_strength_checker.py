@@ -4,6 +4,7 @@ import joblib
 import requests
 import io
 from datetime import datetime
+import base64
 
 # GitHub model URLs
 base_url = "https://raw.githubusercontent.com/RahafRsq/password-strength-checker/main/"
@@ -72,7 +73,7 @@ if password:
     if len(password) < 6:
         st.warning("⚠️ Your password is very short. Use at least 6 characters.")
 
-    # Length strength
+    # Length-based strength
     length = len(password)
     if length >= 13:
         strength_info = ("Strong", "Strong password", "green", "🟢")
@@ -89,7 +90,6 @@ if password:
         unsafe_allow_html=True
     )
 
-    # Model predictions
     st.subheader("🤖 Model Predictions:")
     predictions = check_password_strength(password)
 
@@ -106,7 +106,6 @@ if password:
             unsafe_allow_html=True
         )
 
-    # Tips
     st.subheader("💡 Password Tips:")
     tips = [
         "Use a mix of lowercase and uppercase letters.",
@@ -117,7 +116,7 @@ if password:
     for tip in tips:
         st.write(f"▫️ {tip}")
 
-    # Generate Excel in memory (no saving)
+    # Create Excel in memory
     row = {
         "Password": password,
         "Logistic Regression": predictions.get("Logistic Regression", ""),
@@ -132,7 +131,7 @@ if password:
     df.to_excel(excel_buffer, index=False)
     excel_data = excel_buffer.getvalue()
 
-    # ⬇️ Enlarged icon + success message
+    # Message + small download button
     col1, col2 = st.columns([0.9, 0.1])
     with col1:
         st.success("✅ Your password result is ready for download.")
@@ -140,9 +139,10 @@ if password:
         st.markdown("""
             <style>
             div[data-testid="stDownloadButton"] button {
-                font-size: 24px !important;
-                padding: 0.75em 1.2em;
-                height: 3.2em;
+                font-size: 16px !important;
+                padding: 4px 8px;
+                height: 2.4em;
+                width: 2.4em;
             }
             </style>
         """, unsafe_allow_html=True)
