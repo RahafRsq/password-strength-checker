@@ -15,7 +15,6 @@ model_urls = {
     "svm":                 base_url + "svm_model.pkl",
     "label_encoder":       base_url + "label_encoder.pkl"
 }
-dataset_url = base_url + "passwords_dataset.csv"
 
 @st.cache_resource
 def load_model_from_url(url):
@@ -116,7 +115,7 @@ if password:
     for tip in tips:
         st.write(f"▫️ {tip}")
 
-    # === Save to Excel ===
+    # === Save results to Excel ===
     excel_path = "password_results.xlsx"
     row = {
         "Password": password,
@@ -126,11 +125,22 @@ if password:
         "Support Vector Machine": predictions.get("Support Vector Machine", ""),
         "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
+
     df_row = pd.DataFrame([row])
     if os.path.exists(excel_path):
         existing = pd.read_excel(excel_path)
         new_df = pd.concat([existing, df_row], ignore_index=True)
     else:
         new_df = df_row
+
     new_df.to_excel(excel_path, index=False)
     st.success("✅ Password and predictions saved to Excel.")
+
+    # === Download button ===
+    with open(excel_path, "rb") as file:
+        st.download_button(
+            label="⬇️ Download Password Results (Excel)",
+            data=file,
+            file_name="password_results.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
