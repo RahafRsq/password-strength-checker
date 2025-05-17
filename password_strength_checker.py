@@ -4,7 +4,7 @@ import joblib
 import requests
 import io
 from datetime import datetime
-import base64
+
 
 # GitHub model URLs
 base_url = "https://raw.githubusercontent.com/RahafRsq/password-strength-checker/main/"
@@ -54,6 +54,25 @@ def check_password_strength(password):
 # === UI ===
 st.title("🔐 Password Strength Checker")
 
+# Responsive and dark mode styling
+st.markdown("""
+    <style>
+    @media (max-width: 600px) {
+        div[data-testid="column"] {
+            width: 100% !important;
+            display: block;
+        }
+        .css-1v3fvcr {
+            flex-direction: column !important;
+        }
+    }
+    body {
+        background-color: #0e1117;
+        color: white;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 if 'show_password' not in st.session_state:
     st.session_state.show_password = False
 
@@ -73,7 +92,6 @@ if password:
     if len(password) < 6:
         st.warning("⚠️ Your password is very short. Use at least 6 characters.")
 
-    # Length-based strength
     length = len(password)
     if length >= 13:
         strength_info = ("Strong", "Strong password", "green", "🟢")
@@ -116,7 +134,7 @@ if password:
     for tip in tips:
         st.write(f"▫️ {tip}")
 
-    # Create Excel in memory
+    # Prepare Excel
     row = {
         "Password": password,
         "Logistic Regression": predictions.get("Logistic Regression", ""),
@@ -131,7 +149,7 @@ if password:
     df.to_excel(excel_buffer, index=False)
     excel_data = excel_buffer.getvalue()
 
-    # Message + small download button
+    # Result + small download icon
     col1, col2 = st.columns([0.9, 0.1])
     with col1:
         st.success("✅ Your password result is ready for download.")
