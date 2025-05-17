@@ -4,16 +4,17 @@ import joblib
 import requests
 import io
 import os
+import base64
 from datetime import datetime
 
-# === GitHub Raw URLs ===
+# GitHub model URLs
 base_url = "https://raw.githubusercontent.com/RahafRsq/password-strength-checker/main/"
 model_urls = {
     "logistic_regression": base_url + "logistic_regression_model.pkl",
-    "random_forest":       base_url + "random_forest_model.pkl",
-    "knn":                 base_url + "knn_model.pkl",
-    "svm":                 base_url + "svm_model.pkl",
-    "label_encoder":       base_url + "label_encoder.pkl"
+    "random_forest": base_url + "random_forest_model.pkl",
+    "knn": base_url + "knn_model.pkl",
+    "svm": base_url + "svm_model.pkl",
+    "label_encoder": base_url + "label_encoder.pkl"
 }
 
 @st.cache_resource
@@ -51,7 +52,6 @@ def check_password_strength(password):
 
     return predictions
 
-# === Streamlit UI ===
 st.title("🔐 Password Strength Checker")
 
 if 'show_password' not in st.session_state:
@@ -115,7 +115,7 @@ if password:
     for tip in tips:
         st.write(f"▫️ {tip}")
 
-    # === Save results to Excel ===
+    # Save results to Excel
     excel_path = "password_results.xlsx"
     row = {
         "Password": password,
@@ -134,13 +134,30 @@ if password:
         new_df = df_row
 
     new_df.to_excel(excel_path, index=False)
-    st.success("✅ Password and predictions saved to Excel.")
 
-    # === Download button ===
-    with open(excel_path, "rb") as file:
-        st.download_button(
-            label="⬇️ Download Password Results (Excel)",
-            data=file,
-            file_name="password_results.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+    # Show download button then success message
+    col1, col2 = st.columns([0.5, 0.5])
+    with col1:
+        with open(excel_path, "rb") as file:
+            b64 = base64.b64encode(file.read()).decode()
+            href = f"""
+            <a href="data:application/octet-stream;base64,{b64}" download="password_results.xlsx">
+                <div style='
+                    background-color:#0f62fe;
+                    padding:10px;
+                    border-radius:10px;
+                    color:white;
+                    text-align:center;
+                    font-size:16px;
+                    height:100%;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    '>
+                    ⬇️ Download Excel File
+                </div>
+            </a>
+            """
+            st.markdown(href, unsafe_allow_html=True)
+    with col2:
+        st.success("✅ Password and predictions saved to Excel.")
