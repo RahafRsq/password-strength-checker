@@ -4,6 +4,7 @@ import joblib
 import requests
 import io
 import os
+import base64
 from datetime import datetime
 
 # === GitHub Raw URLs ===
@@ -115,7 +116,7 @@ if password:
     for tip in tips:
         st.write(f"▫️ {tip}")
 
-    # === Save results to Excel ===
+    # === Save to Excel ===
     excel_path = "password_results.xlsx"
     row = {
         "Password": password,
@@ -135,15 +136,29 @@ if password:
 
     new_df.to_excel(excel_path, index=False)
 
-    # === Display success + download side by side ===
-    col1, col2 = st.columns([0.7, 0.3])
+    # === Message + styled download button ===
+    col1, col2 = st.columns([0.5, 0.5])
     with col1:
         st.success("✅ Password and predictions saved to Excel.")
     with col2:
         with open(excel_path, "rb") as file:
-            st.download_button(
-                label="⬇️ Download",
-                data=file,
-                file_name="password_results.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+            b64 = base64.b64encode(file.read()).decode()
+            href = f"""
+            <a href="data:application/octet-stream;base64,{b64}" download="password_results.xlsx">
+                <div style='
+                    background-color:#0f62fe;
+                    padding:10px;
+                    border-radius:10px;
+                    color:white;
+                    text-align:center;
+                    font-size:16px;
+                    height:100%;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    '>
+                    ⬇️ Download Excel File
+                </div>
+            </a>
+            """
+            st.markdown(href, unsafe_allow_html=True)
