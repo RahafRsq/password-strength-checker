@@ -67,14 +67,13 @@ def create_pdf(password, predictions):
     for model, result in predictions.items():
         pdf.cell(0, 10, f"{model}: {result}", ln=True)
 
-    pdf_output = io.BytesIO()
-    pdf.output(pdf_output)
-    return pdf_output.getvalue()
+    # ✅ FIX: return binary content
+    return pdf.output(dest="S").encode("latin1")
 
 # === UI ===
 st.title("🔐 Password Strength Checker")
 
-# Responsive and dark mode support
+# Responsive + dark style
 st.markdown("""
     <style>
     @media (max-width: 600px) {
@@ -154,7 +153,7 @@ if password:
     for tip in tips:
         st.write(f"▫️ {tip}")
 
-    # ✅ Create and download PDF
+    # PDF ready
     col1, col2 = st.columns([0.9, 0.1])
     with col1:
         st.success("✅ Your password result is ready for download.")
