@@ -4,6 +4,7 @@ import joblib
 import requests
 import io
 from datetime import datetime
+from fpdf import FPDF
 import base64
 
 # GitHub model URLs
@@ -51,10 +52,29 @@ def check_password_strength(password):
 
     return predictions
 
+def create_pdf(password, predictions):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(0, 10, "Password Strength Report", ln=True, align='C')
+    pdf.ln(10)
+
+    pdf.set_font("Arial", "", 12)
+    pdf.cell(0, 10, f"Password: {password}", ln=True)
+    pdf.cell(0, 10, f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", ln=True)
+    pdf.ln(5)
+
+    for model, result in predictions.items():
+        pdf.cell(0, 10, f"{model}: {result}", ln=True)
+
+    pdf_output = io.BytesIO()
+    pdf.output(pdf_output)
+    return pdf_output.getvalue()
+
 # === UI ===
 st.title("🔐 Password Strength Checker")
 
-# Responsive and dark mode styling
+# Responsive and dark mode support
 st.markdown("""
     <style>
     @media (max-width: 600px) {
@@ -134,29 +154,15 @@ if password:
     for tip in tips:
         st.write(f"▫️ {tip}")
 
-    # Prepare Excel file in memory
-    row = {
-        "Password": password,
-        "Logistic Regression": predictions.get("Logistic Regression", ""),
-        "Random Forest": predictions.get("Random Forest", ""),
-        "K-Nearest Neighbors": predictions.get("K-Nearest Neighbors", ""),
-        "Support Vector Machine": predictions.get("Support Vector Machine", ""),
-        "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    }
-
-    df = pd.DataFrame([row])
-    excel_buffer = io.BytesIO()
-    df.to_excel(excel_buffer, index=False)
-    excel_data = excel_buffer.getvalue()
-
-    # Message + styled download button
+    # ✅ Create and download PDF
     col1, col2 = st.columns([0.9, 0.1])
     with col1:
         st.success("✅ Your password result is ready for download.")
     with col2:
-        b64 = base64.b64encode(excel_data).decode()
+        pdf_bytes = create_pdf(password, predictions)
+        b64 = base64.b64encode(pdf_bytes).decode()
         st.markdown(f"""
-            <a href="data:application/octet-stream;base64,{b64}" download="password_results.xlsx">
+            <a href="data:application/octet-stream;base64,{b64}" download="password_result.pdf">
                 <div style="
                     background-color:#1f6feb;
                     padding:13px;
