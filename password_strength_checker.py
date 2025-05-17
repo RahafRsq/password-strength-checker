@@ -135,9 +135,11 @@ if password:
 
     new_df.to_excel(excel_path, index=False)
 
-    # Show download button then success message
-    col1, col2 = st.columns([0.5, 0.5])
+    # ✅ Message left - ⬇️ Emoji-only download right
+    col1, col2 = st.columns([0.9, 0.1])
     with col1:
+        st.success("✅ Password and predictions saved to Excel.")
+    with col2:
         with open(excel_path, "rb") as file:
             b64 = base64.b64encode(file.read()).decode()
             href = f"""
@@ -148,16 +150,14 @@ if password:
                     border-radius:10px;
                     color:white;
                     text-align:center;
-                    font-size:16px;
+                    font-size:20px;
                     height:100%;
                     display:flex;
                     align-items:center;
                     justify-content:center;
                     '>
-                    ⬇️ Download Excel File
+                    ⬇️
                 </div>
             </a>
             """
             st.markdown(href, unsafe_allow_html=True)
-    with col2:
-        st.success("✅ Password and predictions saved to Excel.")
