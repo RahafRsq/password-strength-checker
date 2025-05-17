@@ -134,13 +134,16 @@ if password:
         new_df = df_row
 
     new_df.to_excel(excel_path, index=False)
-    st.success("✅ Password and predictions saved to Excel.")
 
-    # === Download button ===
-    with open(excel_path, "rb") as file:
-        st.download_button(
-            label="⬇️ Download Password Results (Excel)",
-            data=file,
-            file_name="password_results.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+    # === Display success + download side by side ===
+    col1, col2 = st.columns([0.7, 0.3])
+    with col1:
+        st.success("✅ Password and predictions saved to Excel.")
+    with col2:
+        with open(excel_path, "rb") as file:
+            st.download_button(
+                label="⬇️ Download",
+                data=file,
+                file_name="password_results.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
